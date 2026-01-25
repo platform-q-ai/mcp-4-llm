@@ -1,10 +1,10 @@
 {
   "name": "create-open-mcp",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "LLM-ready MCP project generator with Clean Architecture, enforced boundaries, and autonomous development guardrails",
   "type": "module",
   "bin": {
-    "create-open-mcp": "./bin/create-open-mcp.js"
+    "create-open-mcp": "bin/create-open-mcp.js"
   },
   "files": [
     "bin/",
