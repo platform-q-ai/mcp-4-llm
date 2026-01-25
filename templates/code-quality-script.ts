@@ -225,6 +225,51 @@ for layer in domain application infrastructure mcp di; do
   fi
 done
 
+# 3b: Check subdirectories have barrel exports
+echo ""
+echo "Checking subdirectory barrel exports..."
+for layer in domain application mcp; do
+  if [ -d "src/\${layer}" ]; then
+    # Find subdirectories that contain .ts files but no index.ts
+    for subdir in src/\${layer}/*/; do
+      if [ -d "\$subdir" ]; then
+        subdir_name=\$(basename "\$subdir")
+        # Skip if no .ts files in subdir
+        ts_count=\$(find "\$subdir" -maxdepth 1 -name "*.ts" ! -name "index.ts" 2>/dev/null | wc -l | tr -d ' ')
+        if [ "\$ts_count" -gt 0 ]; then
+          if [ ! -f "\${subdir}index.ts" ]; then
+            echo -e "\${RED}❌ Missing barrel export: \${subdir}index.ts\${NC}"
+            echo "   Subdirectory has \$ts_count .ts files but no index.ts"
+            ERRORS_FOUND=1
+          fi
+        fi
+      fi
+    done
+  fi
+done
+
+# 3c: Check for direct imports bypassing barrel exports in domain/application
+echo ""
+echo "Checking for direct imports bypassing barrels..."
+
+# Find imports like '../schemas/some.schema.js' that should be '../schemas/index.js'
+# Exclude index.ts/index.js files from matches
+DIRECT_IMPORTS=\$(grep -rn \$EXCLUDE_ARGS "from '\\.\\./" src 2>/dev/null | grep -E "/(entities|value-objects|errors|use-cases|schemas|ports|services|tools)/[^']+\\.js'" | grep -v "/index\\.js'" || true)
+
+if [ -n "\$DIRECT_IMPORTS" ]; then
+  echo -e "\${RED}❌ Found direct imports bypassing barrel exports:\${NC}"
+  echo "\$DIRECT_IMPORTS" | head -10
+  count=\$(echo "\$DIRECT_IMPORTS" | wc -l | tr -d ' ')
+  if [ "\$count" -gt 10 ]; then
+    echo -e "\${YELLOW}   ... and \$((\$count - 10)) more occurrences\${NC}"
+  fi
+  echo ""
+  echo "   Use barrel imports instead: from '../<subdir>/index.js'"
+  ERRORS_FOUND=1
+else
+  echo -e "\${GREEN}✓ No direct imports bypassing barrels\${NC}"
+fi
+
 # ============================================
 # CHECK 4: Zod Validation in Use Cases
 # ============================================

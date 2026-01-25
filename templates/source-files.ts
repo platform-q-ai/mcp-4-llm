@@ -114,6 +114,10 @@ export function validateInput<T>(
 }
 `,
 
+    // Application - Schemas Index
+    'src/application/schemas/index.ts': `export * from './common.schema.js';
+`,
+
     // Application - Ports Index
     'src/application/ports/index.ts': `// Export port interfaces here
 // Example:
@@ -122,7 +126,7 @@ export function validateInput<T>(
 
     // Application - Index
     'src/application/index.ts': `export * from './ports/index.js';
-export * from './schemas/common.schema.js';
+export * from './schemas/index.js';
 `,
 
     // Infrastructure - Index
