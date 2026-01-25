@@ -134,7 +134,7 @@ export async function getPackageJson(name: string, description: string): Promise
       'test:coverage': 'vitest run --coverage',
       'check:code-quality': 'bash scripts/check-code-quality.sh',
       'pre-commit':
-        'npm run check:code-quality && npm run lint && npm run format:check && npm run typecheck && npm run build && npm run test',
+        'npm run check:code-quality && npm run lint && npm run format:check && npm run typecheck && npm run build && npm run test:coverage && npm run test:features',
       prepare: 'husky',
     },
     keywords: ['mcp', 'model-context-protocol', 'llm', 'ai'],
