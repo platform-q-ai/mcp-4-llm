@@ -23,6 +23,7 @@ ERRORS_FOUND=0
 
 EXCLUDE_ARGS="--exclude=check-code-quality.sh --exclude=*.md --exclude=*.json --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git --exclude-dir=coverage --exclude-dir=reports"
 
+# Check for word-bounded patterns (e.g., TODO, FIXME)
 check_pattern() {
   local pattern="\$1"
   local search_dir="\$2"
@@ -30,6 +31,28 @@ check_pattern() {
   
   local results
   results=\$(grep -rniE \$EXCLUDE_ARGS "\\b\${pattern}\\b" "\$search_dir" 2>/dev/null || true)
+  
+  if [ -n "\$results" ]; then
+    echo -e "\${RED}❌ Found '\${pattern}' in \${description}:\${NC}"
+    echo "\$results" | head -5
+    local count
+    count=\$(echo "\$results" | wc -l | tr -d ' ')
+    if [ "\$count" -gt 5 ]; then
+      echo -e "\${YELLOW}   ... and \$((\$count - 5)) more occurrences\${NC}"
+    fi
+    echo ""
+    ERRORS_FOUND=1
+  fi
+}
+
+# Check for literal patterns (e.g., .only(, @ts-ignore)
+check_literal() {
+  local pattern="\$1"
+  local search_dir="\$2"
+  local description="\$3"
+  
+  local results
+  results=\$(grep -rniE \$EXCLUDE_ARGS "\${pattern}" "\$search_dir" 2>/dev/null || true)
   
   if [ -n "\$results" ]; then
     echo -e "\${RED}❌ Found '\${pattern}' in \${description}:\${NC}"
@@ -63,14 +86,14 @@ for pattern in mock fake dummy; do
 done
 
 # Check for focused/skipped tests in production
-check_pattern "\\.only(" "src" "production code"
-check_pattern "\\.skip(" "src" "production code"
+check_literal "\\.only\\(" "src" "production code"
+check_literal "\\.skip\\(" "src" "production code"
 
 # Check for anti-patterns
-check_pattern "as any" "src" "source files"
-check_pattern "@ts-ignore" "src" "source files"
-check_pattern "@ts-expect-error" "src" "source files"
-check_pattern "eslint-disable" "src" "source files"
+check_literal "as any" "src" "source files"
+check_literal "@ts-ignore" "src" "source files"
+check_literal "@ts-expect-error" "src" "source files"
+check_literal "eslint-disable" "src" "source files"
 
 echo -e "\${YELLOW}📁 Checking test files (tests/)...\${NC}"
 echo ""

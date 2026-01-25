@@ -37,14 +37,17 @@ export default [
     },
     settings: {
       'boundaries/elements': [
-        { type: 'domain', pattern: 'domain/*' },
-        { type: 'application', pattern: 'application/*' },
-        { type: 'infrastructure', pattern: 'infrastructure/*' },
-        { type: 'mcp', pattern: 'mcp' },
-        { type: 'di', pattern: 'di' },
-        { type: 'entry', pattern: 'index.ts', mode: 'file' },
+        // Each layer includes all files within that folder
+        { type: 'domain', pattern: 'src/domain/**' },
+        { type: 'application', pattern: 'src/application/**' },
+        { type: 'infrastructure', pattern: 'src/infrastructure/**' },
+        { type: 'mcp', pattern: 'src/mcp/**' },
+        { type: 'di', pattern: 'src/di/**' },
+        // Entry point is specifically src/index.ts only
+        { type: 'entry', pattern: 'src/index.ts', mode: 'file' },
       ],
       'boundaries/dependency-nodes': ['import'],
+      'boundaries/include': ['src/**/*.ts'],
       'import/resolver': {
         typescript: {
           alwaysTryTypes: true,
@@ -95,11 +98,17 @@ export default [
       'boundaries/entry-point': [
         'error',
         {
-          default: 'allow',
+          default: 'disallow',
           message: 'Import from index.ts barrel file instead of internal files',
           rules: [
+            // Domain and application must be imported via barrel (index.ts)
             { target: ['domain'], allow: 'index.ts' },
             { target: ['application'], allow: 'index.ts' },
+            // Infrastructure, MCP, DI allow direct imports
+            { target: ['infrastructure'], allow: '*' },
+            { target: ['mcp'], allow: '*' },
+            { target: ['di'], allow: '*' },
+            { target: ['entry'], allow: '*' },
           ],
         },
       ],
