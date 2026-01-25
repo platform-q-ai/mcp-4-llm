@@ -154,12 +154,13 @@ export default [
         'error',
         {
           groups: [
-            // Side effect imports (must be first)
-            ['^reflect-metadata'],
+            // Side effect imports MUST be first - reflect-metadata required for tsyringe decorators
+            // \\u0000 prefix matches side-effect imports in simple-import-sort
+            ['^\\\\u0000reflect-metadata', '^reflect-metadata'],
             // Node.js builtins
             ['^node:'],
-            // External packages
-            ['^@?\\\\w'],
+            // External packages (excluding reflect-metadata which is handled above)
+            ['^(?!reflect-metadata)@?\\\\w'],
             // Internal - domain layer
             ['^@/domain'],
             // Internal - application layer
