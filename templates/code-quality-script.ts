@@ -163,6 +163,51 @@ if [ -n "\$CONSOLE_LOG" ]; then
   ERRORS_FOUND=1
 fi
 
+# 2g: Generic Error in domain/application layers (should use DomainError)
+if [ -d "src/domain" ]; then
+  GENERIC_ERROR_DOMAIN=\$(grep -rnE \$EXCLUDE_ARGS "throw new Error\\(" src/domain 2>/dev/null | grep -v "DomainError" || true)
+  if [ -n "\$GENERIC_ERROR_DOMAIN" ]; then
+    echo -e "\${RED}❌ Found generic 'throw new Error' in domain layer (use DomainError instead):\${NC}"
+    echo "\$GENERIC_ERROR_DOMAIN" | head -5
+    count=\$(echo "\$GENERIC_ERROR_DOMAIN" | wc -l | tr -d ' ')
+    if [ "\$count" -gt 5 ]; then
+      echo -e "\${YELLOW}   ... and \$((\$count - 5)) more occurrences\${NC}"
+    fi
+    echo ""
+    ERRORS_FOUND=1
+  fi
+fi
+
+if [ -d "src/application" ]; then
+  GENERIC_ERROR_APP=\$(grep -rnE \$EXCLUDE_ARGS "throw new Error\\(" src/application 2>/dev/null | grep -v "DomainError" || true)
+  if [ -n "\$GENERIC_ERROR_APP" ]; then
+    echo -e "\${RED}❌ Found generic 'throw new Error' in application layer (use DomainError instead):\${NC}"
+    echo "\$GENERIC_ERROR_APP" | head -5
+    count=\$(echo "\$GENERIC_ERROR_APP" | wc -l | tr -d ' ')
+    if [ "\$count" -gt 5 ]; then
+      echo -e "\${YELLOW}   ... and \$((\$count - 5)) more occurrences\${NC}"
+    fi
+    echo ""
+    ERRORS_FOUND=1
+  fi
+fi
+
+# 2h: reflect-metadata must be first import in entry point (required for tsyringe)
+if [ -f "src/index.ts" ]; then
+  FIRST_IMPORT=\$(grep -n "^import" src/index.ts 2>/dev/null | head -1 || true)
+  if [ -n "\$FIRST_IMPORT" ]; then
+    if ! echo "\$FIRST_IMPORT" | grep -q "reflect-metadata"; then
+      echo -e "\${RED}❌ reflect-metadata must be the first import in src/index.ts (required for tsyringe):\${NC}"
+      echo "   Found: \$FIRST_IMPORT"
+      echo "   Expected: import 'reflect-metadata';"
+      echo ""
+      ERRORS_FOUND=1
+    else
+      echo -e "\${GREEN}✓ reflect-metadata is first import in entry point\${NC}"
+    fi
+  fi
+fi
+
 # ============================================
 # CHECK 3: Barrel Exports
 # ============================================
