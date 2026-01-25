@@ -25,6 +25,10 @@ export function setupContainer(): void {
 export { container };
 `,
 
+    // DI Index
+    'src/di/index.ts': `export * from './container.js';
+`,
+
     // Domain - Base Error
     'src/domain/errors/base.error.ts': `/**
  * Error categories for classification

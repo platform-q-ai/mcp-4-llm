@@ -4,3 +4,19 @@ bin/
 *.log
 .DS_Store
 *.tgz
+
+# Test output
+.test-output/
+.test-generated/
+reports/
+coverage/
+
+# BDD test generated projects (may be left behind if tests fail)
+*-test/
+test-*/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

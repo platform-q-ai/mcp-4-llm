@@ -14,7 +14,21 @@
     "build": "tsc",
     "prepublishOnly": "npm run build",
     "generate": "tsx create-open-mcp.ts",
-    "test:generate": "tsx create-open-mcp.ts test-project --description 'Test MCP server' && rm -rf test-project"
+    "test:generate": "tsx create-open-mcp.ts test-project --description 'Test MCP server' && rm -rf test-project",
+    "test": "npm run test:unit && npm run test:features",
+    "test:unit": "vitest run",
+    "test:features": "cucumber-js --config cucumber.cjs",
+    "test:features:slow": "cucumber-js --config cucumber.cjs --profile slow",
+    "test:features:all": "cucumber-js --config cucumber.cjs --profile all",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "check:code-quality": "bash scripts/check-code-quality.sh",
+    "pre-commit": "npm run check:code-quality && npm run lint && npm run format:check && npm run typecheck && npm run build && npm run test:coverage",
+    "test:all": "npm run test:coverage && npm run test:features"
   },
   "keywords": [
     "mcp",
@@ -46,8 +60,20 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
+    "@cucumber/cucumber": "^11.0.0",
     "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "@vitest/coverage-v8": "^2.0.0",
+    "chai": "^5.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-simple-import-sort": "^12.0.0",
+    "globals": "^15.0.0",
+    "husky": "^9.0.0",
+    "prettier": "^3.0.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^2.0.0"
   }
 }

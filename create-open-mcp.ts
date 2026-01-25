@@ -7,27 +7,26 @@
  *   npx tsx create-open-mcp.ts my-service --description "My MCP service"
  */
 
-import { mkdir, writeFile } from 'fs/promises';
 import { execSync } from 'child_process';
+import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
 
+import { getAgentsMd } from './templates/agents-md.js';
+import { getClaudeMd } from './templates/claude-md.js';
+import { getCodeQualityScript } from './templates/code-quality-script.js';
+import { getCucumberConfig } from './templates/cucumber-config.js';
+import { getEslintConfig } from './templates/eslint-config.js';
+import { getMiscFiles } from './templates/misc-files.js';
 // ============================================
 // TEMPLATES - Import from separate files
 // ============================================
-
 import { getPackageJson } from './templates/package-json.js';
-import { getTsConfig, getTsConfigEslint, getTsConfigTest } from './templates/tsconfig.js';
-import { getEslintConfig } from './templates/eslint-config.js';
-import { getVitestConfig } from './templates/vitest-config.js';
-import { getCucumberConfig } from './templates/cucumber-config.js';
 import { getPrettierConfig } from './templates/prettier-config.js';
-import { getClaudeMd } from './templates/claude-md.js';
-import { getAgentsMd } from './templates/agents-md.js';
-import { getCodeQualityScript } from './templates/code-quality-script.js';
 import { getSourceFiles } from './templates/source-files.js';
 import { getTestFiles } from './templates/test-files.js';
-import { getMiscFiles } from './templates/misc-files.js';
+import { getTsConfig, getTsConfigEslint, getTsConfigTest } from './templates/tsconfig.js';
+import { getVitestConfig } from './templates/vitest-config.js';
 
 // ============================================
 // DIRECTORY STRUCTURE
@@ -101,11 +100,15 @@ async function main() {
 
   // Validate name
   if (!/^[a-z][a-z0-9-]*$/.test(name)) {
-    console.error('Error: Project name must start with a letter and contain only lowercase letters, numbers, and hyphens');
+    console.error(
+      'Error: Project name must start with a letter and contain only lowercase letters, numbers, and hyphens'
+    );
     process.exit(1);
   }
 
-  const projectPath = path.resolve(process.cwd(), name);
+  // Support TEST_OUTPUT_DIR for testing
+  const baseDir = process.env.TEST_OUTPUT_DIR || process.cwd();
+  const projectPath = path.resolve(baseDir, name);
 
   console.log(`\n📁 Creating ${name} at ${projectPath}...\n`);
 
@@ -118,7 +121,7 @@ async function main() {
   // 2. Fetch package versions and collect all files
   const miscFiles = getMiscFiles();
   const packageJson = await getPackageJson(name, description);
-  
+
   const files: Record<string, string> = {
     // Config files
     'package.json': packageJson,
@@ -179,7 +182,7 @@ async function main() {
   try {
     execSync('npm install', { cwd: projectPath, stdio: 'pipe' });
     console.log('   ✅ Dependencies installed');
-  } catch (error) {
+  } catch {
     console.error('   ⚠️  npm install failed, you may need to run it manually');
   }
 
@@ -209,7 +212,7 @@ async function main() {
       stdio: 'pipe',
     });
     console.log('   ✅ Initial commit created');
-  } catch (error) {
+  } catch {
     console.error('   ⚠️  Git commit failed, you may need to commit manually');
   }
 

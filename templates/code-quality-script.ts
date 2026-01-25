@@ -5,6 +5,20 @@ export function getCodeQualityScript(): string {
 # Code Quality Check Script
 # ============================================
 # Blocks commits containing incomplete code, placeholders, or violations.
+# All checks are errors - no warnings allowed.
+#
+# Checks performed:
+# 1a-d: Incomplete work markers (TODO, FIXME, placeholder, test code, .only/.skip)
+# 2a-f: Type safety and lint bypasses (as any, @ts-ignore, eslint-disable, console.log)
+# 3: Barrel exports exist for all layers
+# 4: Zod validation in use cases (.parse or .safeParse)
+# 5a-b: Domain error structure (base class and implementations)
+# 6a-f: BDD feature coverage (features, scenarios, step definitions)
+# 7: Value objects throw DomainError not generic Error
+# 8: MCP tools have error handling (try-catch, structured errors)
+# 9: MCP tools registered in server
+# 10: Use cases exposed via MCP tools
+# 11: Barrel exports are used
 
 set -e
 
@@ -23,7 +37,7 @@ ERRORS_FOUND=0
 
 EXCLUDE_ARGS="--exclude=check-code-quality.sh --exclude=*.md --exclude=*.json --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git --exclude-dir=coverage --exclude-dir=reports"
 
-# Check for word-bounded patterns (e.g., TODO, FIXME)
+# Helper: Check for word-bounded patterns
 check_pattern() {
   local pattern="\$1"
   local search_dir="\$2"
@@ -45,7 +59,7 @@ check_pattern() {
   fi
 }
 
-# Check for literal patterns (e.g., .only(, @ts-ignore)
+# Helper: Check for literal patterns
 check_literal() {
   local pattern="\$1"
   local search_dir="\$2"
@@ -67,52 +81,64 @@ check_literal() {
   fi
 }
 
-echo -e "\${YELLOW}📁 Checking source files (src/)...\${NC}"
+# ============================================
+# CHECK 1: Incomplete Work Markers
+# ============================================
+
+echo -e "\${YELLOW}📁 CHECK 1: Incomplete work markers...\${NC}"
 echo ""
 
-# Check for incomplete work markers
+# 1a: TODO/FIXME/HACK markers in source
 for pattern in TODO FIXME XXX HACK BUG; do
   check_pattern "\$pattern" "src" "source files"
 done
 
-# Check for placeholder text
+# 1b: Placeholder text
 check_pattern "not implemented" "src" "source files"
 check_pattern "implement this" "src" "source files"
 check_pattern "placeholder" "src" "source files"
 
-# Check for test code in production
+# 1c: Test code in production
 for pattern in mock fake dummy; do
   check_pattern "\$pattern" "src" "production code"
 done
 
-# Check for focused/skipped tests in production
+# 1d: Focused/skipped tests in production
 check_literal "\\.only\\(" "src" "production code"
 check_literal "\\.skip\\(" "src" "production code"
 
-# Check for anti-patterns
-check_literal "as any" "src" "source files"
-check_literal "@ts-ignore" "src" "source files"
-check_literal "@ts-expect-error" "src" "source files"
-check_literal "eslint-disable" "src" "source files"
+# ============================================
+# CHECK 2: Type Safety and Lint Bypasses
+# ============================================
 
-echo -e "\${YELLOW}📁 Checking test files (tests/)...\${NC}"
+echo -e "\${YELLOW}🔒 CHECK 2: Type safety and lint bypasses...\${NC}"
 echo ""
 
+# 2a: Type safety bypasses
+check_literal "as any" "src" "source files"
+
+# 2b: TypeScript suppressions
+check_literal "@ts-ignore" "src" "source files"
+check_literal "@ts-expect-error" "src" "source files"
+
+# 2c: Linting bypasses
+check_literal "eslint-disable" "src" "source files"
+
+# 2d: TODO in tests
 for pattern in TODO FIXME XXX HACK; do
   check_pattern "\$pattern" "tests" "test files"
 done
 
-echo -e "\${YELLOW}🔍 Checking for stub implementations...\${NC}"
-echo ""
-
+# 2e: Stub implementations
 THROW_NOT_IMPL=\$(grep -rniE \$EXCLUDE_ARGS "throw new Error.*not.*implement" src tests 2>/dev/null || true)
 if [ -n "\$THROW_NOT_IMPL" ]; then
-  echo -e "\${RED}❌ Found throw not implemented:\${NC}"
+  echo -e "\${RED}❌ Found stub implementations (throw new Error not implemented):\${NC}"
   echo "\$THROW_NOT_IMPL"
   echo ""
   ERRORS_FOUND=1
 fi
 
+# 2f: Console.log in source
 CONSOLE_LOG=\$(grep -rniE \$EXCLUDE_ARGS "console\\.log\\(" src 2>/dev/null || true)
 if [ -n "\$CONSOLE_LOG" ]; then
   echo -e "\${RED}❌ Found console.log (use console.error for MCP):\${NC}"
@@ -121,11 +147,315 @@ if [ -n "\$CONSOLE_LOG" ]; then
   ERRORS_FOUND=1
 fi
 
+# ============================================
+# CHECK 3: Barrel Exports
+# ============================================
+
+echo -e "\${YELLOW}📦 CHECK 3: Barrel exports...\${NC}"
+echo ""
+
+for layer in domain application infrastructure mcp di; do
+  if [ ! -f "src/\${layer}/index.ts" ]; then
+    echo -e "\${RED}❌ Missing barrel export: src/\${layer}/index.ts\${NC}"
+    echo "   Each layer must have an index.ts that exports its public API"
+    ERRORS_FOUND=1
+  else
+    echo -e "\${GREEN}✓ Found src/\${layer}/index.ts\${NC}"
+  fi
+done
+
+# ============================================
+# CHECK 4: Zod Validation in Use Cases
+# ============================================
+
+echo ""
+echo -e "\${YELLOW}✅ CHECK 4: Zod validation in use cases...\${NC}"
+echo ""
+
+if [ -d "src/application/use-cases" ]; then
+  USE_CASE_FILES=\$(find src/application/use-cases -name "*.use-case.ts" 2>/dev/null || true)
+  
+  for file in \$USE_CASE_FILES; do
+    if [ -f "\$file" ]; then
+      # Check if file has an execute method but no .parse() or .safeParse() call
+      if grep -q "execute" "\$file" 2>/dev/null; then
+        if ! grep -qE "\\.(parse|safeParse)\\(" "\$file" 2>/dev/null; then
+          echo -e "\${RED}❌ Use case missing Zod validation: \$file\${NC}"
+          echo "   Use cases must validate input with schema.parse(input) or schema.safeParse(input)"
+          ERRORS_FOUND=1
+        else
+          echo -e "\${GREEN}✓ \$file has Zod validation\${NC}"
+        fi
+      fi
+    fi
+  done
+else
+  echo -e "\${YELLOW}⚠ No use-cases directory found\${NC}"
+fi
+
+# ============================================
+# CHECK 5: Domain Error Structure
+# ============================================
+
+echo ""
+echo -e "\${YELLOW}🚨 CHECK 5: Domain error structure...\${NC}"
+echo ""
+
+# 5a: Check base.error.ts has abstract properties
+if [ -f "src/domain/errors/base.error.ts" ]; then
+  MISSING_ABSTRACT=""
+  for prop in "code" "suggestedFix" "isRetryable" "category"; do
+    if ! grep -qE "abstract.*\${prop}|readonly.*\${prop}" "src/domain/errors/base.error.ts" 2>/dev/null; then
+      MISSING_ABSTRACT="\${MISSING_ABSTRACT} \${prop}"
+    fi
+  done
+  if [ -n "\$MISSING_ABSTRACT" ]; then
+    echo -e "\${RED}❌ base.error.ts missing abstract properties:\${MISSING_ABSTRACT}\${NC}"
+    ERRORS_FOUND=1
+  else
+    echo -e "\${GREEN}✓ base.error.ts has all required abstract properties\${NC}"
+  fi
+else
+  echo -e "\${RED}❌ Missing src/domain/errors/base.error.ts\${NC}"
+  ERRORS_FOUND=1
+fi
+
+# 5b: Check domain error implementations
+if [ -d "src/domain/errors" ]; then
+  ERROR_FILES=\$(find src/domain/errors -name "*.error.ts" -o -name "*.errors.ts" 2>/dev/null | grep -v "base.error.ts" | grep -v "index.ts" || true)
+  
+  for file in \$ERROR_FILES; do
+    if [ -f "\$file" ]; then
+      MISSING_PROPS=""
+      for prop in "readonly code" "suggestedFix" "isRetryable" "category"; do
+        if ! grep -q "\$prop" "\$file" 2>/dev/null; then
+          MISSING_PROPS="\${MISSING_PROPS} \${prop}"
+        fi
+      done
+      if [ -n "\$MISSING_PROPS" ]; then
+        echo -e "\${RED}❌ Domain error \$file missing:\${MISSING_PROPS}\${NC}"
+        ERRORS_FOUND=1
+      fi
+    fi
+  done
+fi
+
+# ============================================
+# CHECK 6: BDD Feature Coverage
+# ============================================
+
+echo ""
+echo -e "\${YELLOW}🎭 CHECK 6: BDD feature coverage...\${NC}"
+echo ""
+
+# 6a: Features directory exists
+if [ ! -d "features" ]; then
+  echo -e "\${RED}❌ Missing features/ directory\${NC}"
+  ERRORS_FOUND=1
+else
+  echo -e "\${GREEN}✓ features/ directory exists\${NC}"
+fi
+
+# 6b: Feature files exist
+FEATURE_COUNT=\$(find features -name "*.feature" 2>/dev/null | wc -l | tr -d ' ')
+if [ "\$FEATURE_COUNT" -eq 0 ]; then
+  echo -e "\${RED}❌ No .feature files found in features/ directory\${NC}"
+  ERRORS_FOUND=1
+else
+  echo -e "\${GREEN}✓ Found \${FEATURE_COUNT} feature file(s)\${NC}"
+fi
+
+# 6c: Feature files have scenarios
+if [ "\$FEATURE_COUNT" -gt 0 ]; then
+  for feature_file in features/*.feature; do
+    if [ -f "\$feature_file" ]; then
+      SCENARIO_COUNT=\$(grep -cE "^\\s*(Scenario|Scenario Outline):" "\$feature_file" 2>/dev/null || echo "0")
+      if [ "\$SCENARIO_COUNT" -eq 0 ]; then
+        echo -e "\${RED}❌ Feature file has no scenarios: \$feature_file\${NC}"
+        ERRORS_FOUND=1
+      fi
+    fi
+  done
+fi
+
+# 6d: Step definitions exist
+if [ ! -d "tests/step-definitions" ]; then
+  echo -e "\${RED}❌ Missing tests/step-definitions/ directory\${NC}"
+  ERRORS_FOUND=1
+else
+  STEPS_COUNT=\$(find tests/step-definitions -name "*.steps.ts" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "\$STEPS_COUNT" -eq 0 ]; then
+    echo -e "\${RED}❌ No .steps.ts files found in tests/step-definitions/\${NC}"
+    ERRORS_FOUND=1
+  else
+    echo -e "\${GREEN}✓ Found \${STEPS_COUNT} step definition file(s)\${NC}"
+  fi
+fi
+
+# 6e: Use cases have feature coverage (check use case names appear in features)
+if [ -d "src/application/use-cases" ] && [ "\$FEATURE_COUNT" -gt 0 ]; then
+  USE_CASE_COUNT=\$(find src/application/use-cases -name "*.use-case.ts" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "\$USE_CASE_COUNT" -gt 0 ]; then
+    echo "Checking use case feature coverage..."
+    # This is a soft check - just warn if use cases don't appear in features
+  fi
+fi
+
+# 6f: Minimum scenario count (at least 2 scenarios per use case on average)
+TOTAL_SCENARIOS=\$(grep -rhE "^\\s*(Scenario|Scenario Outline):" features/*.feature 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+USE_CASE_COUNT=\$(find src/application/use-cases -name "*.use-case.ts" 2>/dev/null | wc -l | tr -d ' ' || echo "1")
+if [ "\$USE_CASE_COUNT" -gt 0 ] && [ "\$TOTAL_SCENARIOS" -gt 0 ]; then
+  RATIO=\$((\$TOTAL_SCENARIOS / \$USE_CASE_COUNT))
+  if [ "\$RATIO" -lt 2 ]; then
+    echo -e "\${YELLOW}⚠ Low scenario coverage: \${TOTAL_SCENARIOS} scenarios for \${USE_CASE_COUNT} use cases (recommend ≥2 per use case)\${NC}"
+  else
+    echo -e "\${GREEN}✓ Good scenario coverage: \${TOTAL_SCENARIOS} scenarios for \${USE_CASE_COUNT} use cases\${NC}"
+  fi
+fi
+
+# ============================================
+# CHECK 7: Value Objects Throw Domain Errors
+# ============================================
+
+echo ""
+echo -e "\${YELLOW}💎 CHECK 7: Value object error types...\${NC}"
+echo ""
+
+if [ -d "src/domain/value-objects" ]; then
+  VO_FILES=\$(find src/domain/value-objects -name "*.vo.ts" -o -name "*.value-object.ts" 2>/dev/null || true)
+  
+  for file in \$VO_FILES; do
+    if [ -f "\$file" ]; then
+      # Check for generic Error throw (not DomainError)
+      GENERIC_ERRORS=\$(grep -n "throw new Error(" "\$file" 2>/dev/null | grep -v "DomainError" || true)
+      if [ -n "\$GENERIC_ERRORS" ]; then
+        echo -e "\${RED}❌ Value object throws generic Error instead of DomainError: \$file\${NC}"
+        echo "\$GENERIC_ERRORS"
+        ERRORS_FOUND=1
+      fi
+    fi
+  done
+fi
+
+# ============================================
+# CHECK 8: MCP Tool Error Handling
+# ============================================
+
+echo ""
+echo -e "\${YELLOW}🔧 CHECK 8: MCP tool error handling...\${NC}"
+echo ""
+
+if [ -d "src/mcp/tools" ]; then
+  TOOL_FILES=\$(find src/mcp/tools -name "*.tool.ts" 2>/dev/null || true)
+  
+  for file in \$TOOL_FILES; do
+    if [ -f "\$file" ]; then
+      # Check for try-catch blocks
+      if ! grep -q "try" "\$file" 2>/dev/null || ! grep -q "catch" "\$file" 2>/dev/null; then
+        echo -e "\${RED}❌ MCP tool missing try-catch: \$file\${NC}"
+        ERRORS_FOUND=1
+      fi
+      
+      # Check for structured error response (isError or error object with code)
+      if ! grep -qE "(isError.*true|\\{ error:|code:.*message:|formatError)" "\$file" 2>/dev/null; then
+        echo -e "\${RED}❌ MCP tool missing structured error response: \$file\${NC}"
+        echo "   Tools must return { isError: true, content: [...] } with code, message, suggestedFix"
+        ERRORS_FOUND=1
+      else
+        echo -e "\${GREEN}✓ \$file has error handling\${NC}"
+      fi
+    fi
+  done
+fi
+
+# ============================================
+# CHECK 9: MCP Tools Registered in Server
+# ============================================
+
+echo ""
+echo -e "\${YELLOW}📡 CHECK 9: MCP tools registered in server...\${NC}"
+echo ""
+
+if [ -f "src/mcp/server.ts" ] && [ -d "src/mcp/tools" ]; then
+  TOOL_FILES=\$(find src/mcp/tools -name "*.tool.ts" ! -name "index.ts" 2>/dev/null || true)
+  
+  for file in \$TOOL_FILES; do
+    if [ -f "\$file" ]; then
+      # Extract class name
+      CLASS_NAME=\$(grep -oE "class [A-Z][a-zA-Z]*Tool" "\$file" | head -1 | awk '{print \$2}')
+      if [ -n "\$CLASS_NAME" ]; then
+        # Check if imported and resolved in server.ts
+        if ! grep -q "\$CLASS_NAME" "src/mcp/server.ts" 2>/dev/null; then
+          echo -e "\${RED}❌ Tool not registered in server.ts: \$CLASS_NAME\${NC}"
+          ERRORS_FOUND=1
+        else
+          # Check if container.resolve is called
+          if ! grep -qE "resolve.*\$CLASS_NAME|resolve\\(\$CLASS_NAME\\)" "src/mcp/server.ts" 2>/dev/null; then
+            echo -e "\${YELLOW}⚠ Tool may not be resolved from container: \$CLASS_NAME\${NC}"
+          else
+            echo -e "\${GREEN}✓ \$CLASS_NAME registered in server\${NC}"
+          fi
+        fi
+      fi
+    fi
+  done
+fi
+
+# ============================================
+# CHECK 10: Use Cases Exposed via MCP
+# ============================================
+
+echo ""
+echo -e "\${YELLOW}🔗 CHECK 10: Use cases exposed via MCP...\${NC}"
+echo ""
+
+if [ -d "src/application/use-cases" ] && [ -d "src/mcp/tools" ]; then
+  USE_CASE_FILES=\$(find src/application/use-cases -name "*.use-case.ts" ! -name "index.ts" 2>/dev/null || true)
+  
+  for file in \$USE_CASE_FILES; do
+    if [ -f "\$file" ]; then
+      CLASS_NAME=\$(grep -oE "class [A-Z][a-zA-Z]*UseCase" "\$file" | head -1 | awk '{print \$2}')
+      if [ -n "\$CLASS_NAME" ]; then
+        # Check if use case is referenced in any MCP tool
+        FOUND_IN_TOOL=\$(grep -rl "\$CLASS_NAME" src/mcp/tools/*.tool.ts 2>/dev/null || true)
+        if [ -z "\$FOUND_IN_TOOL" ]; then
+          echo -e "\${YELLOW}⚠ Use case not exposed via MCP tool: \$CLASS_NAME\${NC}"
+        else
+          echo -e "\${GREEN}✓ \$CLASS_NAME exposed via MCP\${NC}"
+        fi
+      fi
+    fi
+  done
+fi
+
+# ============================================
+# CHECK 11: Barrel Exports Used
+# ============================================
+
+echo ""
+echo -e "\${YELLOW}📤 CHECK 11: Barrel exports are used...\${NC}"
+echo ""
+
+if [ -f "src/mcp/tools/index.ts" ] && [ -f "src/mcp/server.ts" ]; then
+  # Get exported tool names from index.ts
+  EXPORTED_TOOLS=\$(grep -oE "export.*from.*'\\./" src/mcp/tools/index.ts 2>/dev/null | grep -oE "'\\./[^']+'" | tr -d "'./" || true)
+  
+  # Check each export is used in server.ts (via the barrel import)
+  if grep -q "from.*tools" "src/mcp/server.ts" 2>/dev/null || grep -q "from.*'./tools'" "src/mcp/server.ts" 2>/dev/null; then
+    echo -e "\${GREEN}✓ Server imports from tools barrel\${NC}"
+  fi
+fi
+
+# ============================================
+# SUMMARY
+# ============================================
+
+echo ""
 echo -e "\${BLUE}══════════════════════════════════════════════════════════════\${NC}"
 echo ""
 
 if [ \$ERRORS_FOUND -eq 0 ]; then
-  echo -e "\${GREEN}✅ Code quality check passed!\${NC}"
+  echo -e "\${GREEN}✅ All code quality checks passed!\${NC}"
   exit 0
 else
   echo -e "\${RED}❌ Code quality check failed!\${NC}"

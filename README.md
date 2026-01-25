@@ -61,12 +61,12 @@ my-service/
 
 ESLint rules prevent architectural violations:
 
-| Layer | Can Import | Cannot Import |
-|-------|------------|---------------|
-| domain | domain | everything else |
-| application | application, domain | infrastructure, mcp, di |
-| infrastructure | infrastructure, application, domain | mcp, di |
-| mcp | mcp, application, di | domain, infrastructure |
+| Layer          | Can Import                          | Cannot Import           |
+| -------------- | ----------------------------------- | ----------------------- |
+| domain         | domain                              | everything else         |
+| application    | application, domain                 | infrastructure, mcp, di |
+| infrastructure | infrastructure, application, domain | mcp, di                 |
+| mcp            | mcp, application, di                | domain, infrastructure  |
 
 ### External Package Restrictions
 
@@ -76,6 +76,7 @@ ESLint rules prevent architectural violations:
 ### Code Quality Checks
 
 Pre-commit hooks block:
+
 - TODO/FIXME comments
 - `any` types
 - console.log (use console.error for MCP)
@@ -119,18 +120,18 @@ npx tsx create-open-mcp.ts
 
 ## Generated Project Commands
 
-| Command | Purpose |
-|---------|---------|
-| `npm run dev` | Start with hot reload |
-| `npm run build` | Compile TypeScript |
-| `npm run start` | Run production build |
-| `npm run test` | Run all tests |
-| `npm run test:unit` | Unit tests only |
-| `npm run test:features` | BDD tests only |
-| `npm run test:coverage` | Tests with coverage |
-| `npm run lint` | Check for issues |
-| `npm run lint:fix` | Auto-fix issues |
-| `npm run pre-commit` | Full quality gate |
+| Command                 | Purpose               |
+| ----------------------- | --------------------- |
+| `npm run dev`           | Start with hot reload |
+| `npm run build`         | Compile TypeScript    |
+| `npm run start`         | Run production build  |
+| `npm run test`          | Run all tests         |
+| `npm run test:unit`     | Unit tests only       |
+| `npm run test:features` | BDD tests only        |
+| `npm run test:coverage` | Tests with coverage   |
+| `npm run lint`          | Check for issues      |
+| `npm run lint:fix`      | Auto-fix issues       |
+| `npm run pre-commit`    | Full quality gate     |
 
 ## Development Workflow
 
@@ -204,13 +205,13 @@ Edit `templates/eslint-config.ts` to add or modify rules.
 
 Edit files in `templates/` directory:
 
-| File | Purpose |
-|------|---------|
-| `source-files.ts` | Generated source code |
-| `test-files.ts` | Test setup files |
-| `agents-md.ts` | LLM development guide |
-| `claude-md.ts` | Imports from agents-md.ts |
-| `misc-files.ts` | gitignore, conventions, etc. |
+| File              | Purpose                      |
+| ----------------- | ---------------------------- |
+| `source-files.ts` | Generated source code        |
+| `test-files.ts`   | Test setup files             |
+| `agents-md.ts`    | LLM development guide        |
+| `claude-md.ts`    | Imports from agents-md.ts    |
+| `misc-files.ts`   | gitignore, conventions, etc. |
 
 ## Project Structure
 

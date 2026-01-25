@@ -38,9 +38,9 @@ async function getLatestVersion(pkg: string): Promise<string> {
     if (!response.ok) {
       throw new Error(`Failed to fetch ${pkg}: ${response.status}`);
     }
-    const data = await response.json() as { version: string };
+    const data = (await response.json()) as { version: string };
     return `^${data.version}`;
-  } catch (error) {
+  } catch {
     console.error(`  ⚠️  Could not fetch latest version for ${pkg}, using fallback`);
     return getFallbackVersion(pkg);
   }
@@ -52,10 +52,10 @@ async function getLatestVersion(pkg: string): Promise<string> {
 function getFallbackVersion(pkg: string): string {
   const fallbacks: Record<string, string> = {
     '@modelcontextprotocol/sdk': '^1.25.2',
-    'dotenv': '^17.2.3',
+    dotenv: '^17.2.3',
     'reflect-metadata': '^0.2.2',
-    'tsyringe': '^4.10.0',
-    'zod': '^4.3.5',
+    tsyringe: '^4.10.0',
+    zod: '^4.3.5',
     '@cucumber/cucumber': '^12.5.0',
     '@eslint/js': '^9.27.0',
     '@types/chai': '^5.2.3',
@@ -63,18 +63,18 @@ function getFallbackVersion(pkg: string): string {
     '@typescript-eslint/eslint-plugin': '^8.32.0',
     '@typescript-eslint/parser': '^8.32.0',
     '@vitest/coverage-v8': '^4.0.17',
-    'chai': '^6.2.2',
-    'eslint': '^9.27.0',
+    chai: '^6.2.2',
+    eslint: '^9.27.0',
     'eslint-import-resolver-typescript': '^4.4.4',
     'eslint-plugin-boundaries': '^5.0.1',
     'eslint-plugin-simple-import-sort': '^12.1.0',
-    'husky': '^9.1.7',
+    husky: '^9.1.7',
     'lint-staged': '^16.2.7',
-    'prettier': '^3.5.3',
+    prettier: '^3.5.3',
     'tsc-alias': '^1.8.16',
-    'tsx': '^4.19.4',
-    'typescript': '^5.9.3',
-    'vitest': '^4.0.17',
+    tsx: '^4.19.4',
+    typescript: '^5.9.3',
+    vitest: '^4.0.17',
   };
   return fallbacks[pkg] || '^1.0.0';
 }
@@ -84,7 +84,7 @@ function getFallbackVersion(pkg: string): string {
  */
 async function fetchVersions(packages: string[]): Promise<Record<string, string>> {
   const results: Record<string, string> = {};
-  
+
   // Fetch in parallel with concurrency limit
   const batchSize = 5;
   for (let i = 0; i < packages.length; i += batchSize) {
@@ -94,7 +94,7 @@ async function fetchVersions(packages: string[]): Promise<Record<string, string>
       results[pkg] = versions[index];
     });
   }
-  
+
   return results;
 }
 
@@ -103,7 +103,7 @@ async function fetchVersions(packages: string[]): Promise<Record<string, string>
  */
 export async function getPackageJson(name: string, description: string): Promise<string> {
   console.log('   📡 Fetching latest package versions from npm...');
-  
+
   const [deps, devDeps] = await Promise.all([
     fetchVersions(dependencies),
     fetchVersions(devDependencies),

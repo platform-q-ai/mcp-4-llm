@@ -177,13 +177,13 @@ export default [
       ],
       'simple-import-sort/exports': 'error',
 
-      // === CODE QUALITY ===
+      // === CODE QUALITY - all errors, no warnings ===
       'no-console': ['error', { allow: ['warn', 'error'] }],
-      complexity: ['warn', 10],
-      'max-depth': ['warn', 4],
+      complexity: ['error', 10],
+      'max-depth': ['error', 4],
       'max-lines': ['error', { max: 750, skipBlankLines: true, skipComments: true }],
-      'max-lines-per-function': ['warn', { max: 100, skipBlankLines: true, skipComments: true }],
-      'max-params': ['warn', 4],
+      'max-lines-per-function': ['error', { max: 100, skipBlankLines: true, skipComments: true }],
+      'max-params': ['error', 4],
     },
   },
 
