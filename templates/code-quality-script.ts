@@ -98,9 +98,25 @@ check_pattern "not implemented" "src" "source files"
 check_pattern "implement this" "src" "source files"
 check_pattern "placeholder" "src" "source files"
 
-# 1c: Test code in production
-for pattern in mock fake dummy; do
+# 1c: Test code in production (standalone words)
+for pattern in mock fake dummy stub; do
   check_pattern "\$pattern" "src" "production code"
+done
+
+# 1c-2: Test doubles with camelCase naming (MockService, FakeRepository, etc.)
+for prefix in Mock Fake Dummy Stub; do
+  CAMEL_CASE=\$(grep -rnE \$EXCLUDE_ARGS "\${prefix}[A-Z][a-zA-Z]*" src 2>/dev/null || true)
+  if [ -n "\$CAMEL_CASE" ]; then
+    echo -e "\${RED}❌ Found test double in production code (\${prefix}*):\${NC}"
+    echo "\$CAMEL_CASE" | head -5
+    local count
+    count=\$(echo "\$CAMEL_CASE" | wc -l | tr -d ' ')
+    if [ "\$count" -gt 5 ]; then
+      echo -e "\${YELLOW}   ... and \$((\$count - 5)) more occurrences\${NC}"
+    fi
+    echo ""
+    ERRORS_FOUND=1
+  fi
 done
 
 # 1d: Focused/skipped tests in production
