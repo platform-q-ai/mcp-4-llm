@@ -38,7 +38,7 @@ async function getLatestVersion(pkg: string): Promise<string> {
     if (!response.ok) {
       throw new Error(`Failed to fetch ${pkg}: ${response.status}`);
     }
-    const data = await response.json();
+    const data = await response.json() as { version: string };
     return `^${data.version}`;
   } catch (error) {
     console.error(`  ⚠️  Could not fetch latest version for ${pkg}, using fallback`);

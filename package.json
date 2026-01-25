@@ -1,27 +1,50 @@
 {
   "name": "create-open-mcp",
   "version": "1.0.0",
-  "description": "LLM-ready MCP project generator with Clean Architecture",
+  "description": "LLM-ready MCP project generator with Clean Architecture, enforced boundaries, and autonomous development guardrails",
   "type": "module",
-  "main": "create-open-mcp.ts",
   "bin": {
-    "create-open-mcp": "./create-open-mcp.ts"
+    "create-open-mcp": "./bin/create-open-mcp.js"
   },
+  "files": [
+    "bin/",
+    "README.md"
+  ],
   "scripts": {
-    "generate": "npx tsx create-open-mcp.ts",
-    "test:generate": "npx tsx create-open-mcp.ts test-project --description 'Test MCP server'"
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "generate": "tsx create-open-mcp.ts",
+    "test:generate": "tsx create-open-mcp.ts test-project --description 'Test MCP server' && rm -rf test-project"
   },
   "keywords": [
     "mcp",
     "model-context-protocol",
     "generator",
     "scaffold",
+    "scaffolding",
     "clean-architecture",
     "llm",
-    "ai"
+    "ai",
+    "claude",
+    "typescript",
+    "bdd",
+    "cucumber",
+    "eslint",
+    "boundaries"
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/open-mcp-generator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/open-mcp-generator/issues"
+  },
+  "homepage": "https://github.com/your-org/open-mcp-generator#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "tsx": "^4.19.0",
