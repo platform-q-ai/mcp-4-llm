@@ -1,0 +1,30 @@
+{
+  "name": "create-open-mcp",
+  "version": "1.0.0",
+  "description": "LLM-ready MCP project generator with Clean Architecture",
+  "type": "module",
+  "main": "create-open-mcp.ts",
+  "bin": {
+    "create-open-mcp": "./create-open-mcp.ts"
+  },
+  "scripts": {
+    "generate": "npx tsx create-open-mcp.ts",
+    "test:generate": "npx tsx create-open-mcp.ts test-project --description 'Test MCP server'"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "generator",
+    "scaffold",
+    "clean-architecture",
+    "llm",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
