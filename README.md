@@ -1,19 +1,15 @@
 # create-open-mcp
 
+[![npm version](https://badge.fury.io/js/create-open-mcp.svg)](https://www.npmjs.com/package/create-open-mcp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A CLI tool that generates LLM-ready MCP (Model Context Protocol) server projects with Clean Architecture, comprehensive linting, and autonomous development guardrails.
 
 ## Quick Start
 
 ```bash
-# Clone this repo
-git clone <repo-url> create-open-mcp
-cd create-open-mcp
-
-# Install dependencies
-npm install
-
 # Generate a new project
-npx tsx create-open-mcp.ts my-service --description "My MCP service"
+npx create-open-mcp my-service --description "My MCP service"
 
 # Start developing
 cd my-service
@@ -87,7 +83,7 @@ Pre-commit hooks block:
 ### Test Coverage Requirements
 
 - Statements: 80%
-- Branches: 75%
+- Branches: 80%
 - Functions: 80%
 - Lines: 80%
 
@@ -100,21 +96,21 @@ The generator fetches current versions from npm registry at generation time.
 ### Basic
 
 ```bash
-npx tsx create-open-mcp.ts <project-name>
+npx create-open-mcp <project-name>
 ```
 
 ### With Description
 
 ```bash
-npx tsx create-open-mcp.ts my-service --description "My awesome MCP service"
+npx create-open-mcp my-service --description "My awesome MCP service"
 # or
-npx tsx create-open-mcp.ts my-service -d "My awesome MCP service"
+npx create-open-mcp my-service -d "My awesome MCP service"
 ```
 
 ### Interactive
 
 ```bash
-npx tsx create-open-mcp.ts
+npx create-open-mcp
 # Prompts for project name and description
 ```
 
