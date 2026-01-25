@@ -93,25 +93,15 @@ The generator fetches current versions from npm registry at generation time.
 
 ## Usage
 
-### Basic
-
 ```bash
 npx create-open-mcp <project-name>
 ```
 
-### With Description
-
-```bash
-npx create-open-mcp my-service --description "My awesome MCP service"
-# or
-npx create-open-mcp my-service -d "My awesome MCP service"
-```
-
-### Interactive
+Or run interactively:
 
 ```bash
 npx create-open-mcp
-# Prompts for project name and description
+# Prompts for project name
 ```
 
 ## Generated Project Commands

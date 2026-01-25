@@ -3,8 +3,7 @@
  * create-open-mcp - LLM-ready MCP project generator
  *
  * Usage:
- *   npx tsx create-open-mcp.ts <project-name>
- *   npx tsx create-open-mcp.ts my-service --description "My MCP service"
+ *   npx create-open-mcp <project-name>
  */
 
 import { execSync } from 'child_process';
@@ -87,16 +86,13 @@ async function main() {
 
   // Parse CLI args
   let name = process.argv[2];
-  const descFlag = process.argv.findIndex((a) => a === '--description' || a === '-d');
-  let description = descFlag !== -1 ? process.argv[descFlag + 1] : '';
 
   if (!name || name.startsWith('-')) {
     name = await prompt('Project name: ');
   }
 
-  if (!description) {
-    description = (await prompt('Description (optional): ')) || `${name} MCP server`;
-  }
+  // Auto-generate description from project name
+  const description = `${name} MCP server`;
 
   // Validate name
   if (!/^[a-z][a-z0-9-]*$/.test(name)) {
