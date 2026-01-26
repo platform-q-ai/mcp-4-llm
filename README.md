@@ -172,7 +172,7 @@ my-service/
 ├── scripts/
 │   └── check-code-quality.sh
 ├── CLAUDE.md             # LLM development guide
-├── agents.md             # LLM development guide (identical)
+├── AGENTS.md             # LLM development guide (identical)
 └── [config files]
 ```
 
@@ -488,7 +488,7 @@ All checks must pass before committing.
 
 ## LLM Development Guides
 
-The generated `CLAUDE.md` and `agents.md` files contain comprehensive guidance for LLMs:
+The generated `CLAUDE.md` and `AGENTS.md` files contain comprehensive guidance for LLMs:
 
 - **Critical rules** - NEVER DO / ALWAYS DO lists
 - **Architecture diagrams** - Visual layer structure

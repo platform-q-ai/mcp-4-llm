@@ -48,7 +48,7 @@ Feature: Generate MCP Project
       | .prettierrc             |
       | .gitignore              |
       | CLAUDE.md               |
-      | agents.md               |
+      | AGENTS.md               |
       | CONVENTIONS.md          |
       | scripts/check-code-quality.sh |
       | .husky/pre-commit       |

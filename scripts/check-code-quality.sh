@@ -93,20 +93,20 @@ else
     echo -e "${GREEN}✓ No focused or skipped tests${NC}"
 fi
 
-# Check that CLAUDE.md and agents.md are identical
+# Check that CLAUDE.md and AGENTS.md are identical
 echo ""
-echo "Checking that CLAUDE.md and agents.md are identical..."
+echo "Checking that CLAUDE.md and AGENTS.md are identical..."
 if [ ! -f "CLAUDE.md" ]; then
-    echo -e "${RED}❌ CLAUDE.md is missing. Copy agents.md to CLAUDE.md.${NC}"
+    echo -e "${RED}❌ CLAUDE.md is missing. Copy AGENTS.md to CLAUDE.md.${NC}"
     ERRORS=$((ERRORS + 1))
-elif [ ! -f "agents.md" ]; then
-    echo -e "${RED}❌ agents.md is missing.${NC}"
+elif [ ! -f "AGENTS.md" ]; then
+    echo -e "${RED}❌ AGENTS.md is missing.${NC}"
     ERRORS=$((ERRORS + 1))
-elif ! diff -q CLAUDE.md agents.md > /dev/null 2>&1; then
-    echo -e "${RED}❌ CLAUDE.md and agents.md are not identical. Keep them in sync.${NC}"
+elif ! diff -q CLAUDE.md AGENTS.md > /dev/null 2>&1; then
+    echo -e "${RED}❌ CLAUDE.md and AGENTS.md are not identical. Keep them in sync.${NC}"
     ERRORS=$((ERRORS + 1))
 else
-    echo -e "${GREEN}✓ CLAUDE.md and agents.md are identical${NC}"
+    echo -e "${GREEN}✓ CLAUDE.md and AGENTS.md are identical${NC}"
 fi
 
 echo ""

@@ -37,9 +37,9 @@ Feature: Validate Template Output
     Given the source files template is loaded with name "test-project"
     Then the server.ts should import McpServer from SDK
 
-  Scenario: CLAUDE.md and agents.md templates are identical
+  Scenario: CLAUDE.md and AGENTS.md templates are identical
     Given the documentation templates are loaded with name "test-project"
-    Then CLAUDE.md and agents.md should have identical content
+    Then CLAUDE.md and AGENTS.md should have identical content
 
   # ============================================
   # Full generation tests (slow - requires npm install)

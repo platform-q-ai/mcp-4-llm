@@ -119,7 +119,7 @@ Then('the server.ts should import McpServer from SDK', function () {
 // Documentation templates validation
 // ============================================
 
-Then('CLAUDE.md and agents.md should have identical content', function () {
+Then('CLAUDE.md and AGENTS.md should have identical content', function () {
   expect(claudeMdOutput).to.equal(agentsMdOutput);
   expect(claudeMdOutput.length).to.be.greaterThan(0);
 });

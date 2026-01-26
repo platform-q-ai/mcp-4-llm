@@ -131,7 +131,7 @@ async function main() {
 
     // Documentation
     'CLAUDE.md': getClaudeMd(name),
-    'agents.md': getAgentsMd(name),
+    'AGENTS.md': getAgentsMd(name),
     'CONVENTIONS.md': miscFiles.conventions,
     'TROUBLESHOOTING.md': miscFiles.troubleshooting,
 
@@ -238,7 +238,7 @@ async function main() {
 ║                                                              ║
 ╠══════════════════════════════════════════════════════════════╣
 ║                                                              ║
-║  📖 Read CLAUDE.md and agents.md for development guide       ║
+║  📖 Read CLAUDE.md and AGENTS.md for development guide       ║
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝
 `);
