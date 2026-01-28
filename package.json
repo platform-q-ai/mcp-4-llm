@@ -1,11 +1,10 @@
 {
   "name": "@pqai/mcp-4-llm",
-  "version": "1.5.4",
+  "version": "1.5.8",
   "description": "MCP 4 LLM - LLM-ready MCP project generator with Clean Architecture, enforced boundaries, and autonomous development guardrails",
   "type": "module",
   "bin": {
-    "mcp-4-llm": "bin/create-open-mcp.js",
-    "@pqai/mcp-4-llm": "bin/create-open-mcp.js"
+    "mcp-4-llm": "bin/create-open-mcp.js"
   },
   "files": [
     "bin/",
@@ -52,12 +51,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pqai/mcp-4-llm.git"
+    "url": "git+https://github.com/platform-q-ai/mcp-4-llm.git"
   },
   "bugs": {
-    "url": "https://github.com/pqai/mcp-4-llm/issues"
+    "url": "https://github.com/platform-q-ai/mcp-4-llm/issues"
   },
-  "homepage": "https://github.com/pqai/mcp-4-llm#readme",
+  "homepage": "https://github.com/platform-q-ai/mcp-4-llm#readme",
   "engines": {
     "node": ">=18.0.0"
   },

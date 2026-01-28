@@ -1,6 +1,6 @@
-# create-open-mcp
+# mcp-4-llm
 
-[![npm version](https://badge.fury.io/js/create-open-mcp.svg)](https://www.npmjs.com/package/create-open-mcp)
+[![npm version](https://badge.fury.io/js/@pqai/mcp-4-llm.svg)](https://www.npmjs.com/package/@pqai/mcp-4-llm)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A CLI tool that generates LLM-ready MCP (Model Context Protocol) server projects with Clean Architecture, comprehensive linting, and autonomous development guardrails.
@@ -8,7 +8,7 @@ A CLI tool that generates LLM-ready MCP (Model Context Protocol) server projects
 ## Quick Start
 
 ```bash
-npx create-open-mcp my-service
+npx @pqai/mcp-4-llm my-service
 cd my-service
 npm run dev
 ```
@@ -389,13 +389,13 @@ ESLint boundary rules enforce layer dependencies at compile time:
 ## Usage
 
 ```bash
-npx create-open-mcp <project-name>
+npx @pqai/mcp-4-llm <project-name>
 ```
 
 Or run interactively:
 
 ```bash
-npx create-open-mcp
+npx @pqai/mcp-4-llm
 # Prompts for project name
 ```
 
