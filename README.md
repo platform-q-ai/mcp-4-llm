@@ -430,9 +430,11 @@ npm run pre-commit
 
 ## Development Workflow
 
-The generated project enforces BDD-first development:
+The generated project enforces strict **Red-Green-Refactor** TDD/BDD practices. Every feature must go through this cycle:
 
-### 1. Write Feature File
+### Phase 1: RED - Write Failing Feature Tests
+
+#### Step 1.1: Write Feature File
 
 ```gherkin
 # features/create-thing.feature
@@ -448,7 +450,7 @@ Feature: Create Thing
     And I should receive the thing ID
 ```
 
-### 2. Implement Step Definitions
+#### Step 1.2: Implement Step Definitions
 
 ```typescript
 // tests/step-definitions/create-thing.steps.ts
@@ -469,7 +471,124 @@ Then('the thing should be created', function () {
 });
 ```
 
-### 3. Implement Inside-Out
+#### Step 1.3: Verify Feature Tests FAIL (RED)
+
+```bash
+npm run test:features
+# Expected: Tests should FAIL because the feature is not implemented yet
+# This confirms your tests are actually testing something
+```
+
+**CRITICAL**: If tests pass at this stage, your tests are not testing the right thing!
+
+### Phase 2: RED - Write Failing Unit Tests
+
+#### Step 2.1: Write Unit Tests for Templates
+
+```typescript
+// tests/unit/templates/new-template.test.ts
+import { describe, it, expect } from 'vitest';
+
+import { getNewTemplate } from '../../../templates/new-template';
+
+describe('new-template', () => {
+  it('should generate valid output', () => {
+    const result = getNewTemplate('test-project');
+    expect(result).toContain('test-project');
+  });
+});
+```
+
+#### Step 2.2: Verify Unit Tests FAIL (RED)
+
+```bash
+npm run test:unit
+# Expected: Tests should FAIL because the template doesn't exist yet
+```
+
+**CRITICAL**: Both BDD tests AND unit tests must be RED before proceeding!
+
+### Phase 3: GREEN - Implement to Make Tests Pass
+
+#### Step 3.1: Implement Template/Generator Code
+
+Now write the minimal code needed to make tests pass:
+
+```typescript
+// templates/new-template.ts
+export function getNewTemplate(name: string): string {
+  return `// Generated for ${name}`;
+}
+```
+
+#### Step 3.2: Verify Unit Tests PASS (GREEN)
+
+```bash
+npm run test:unit
+# Expected: Unit tests should now PASS
+```
+
+#### Step 3.3: Verify Feature Tests PASS (GREEN)
+
+```bash
+npm run test:features
+# Expected: BDD tests should now PASS
+```
+
+#### Step 3.4: Verify All Quality Gates PASS
+
+```bash
+npm run pre-commit
+# Expected: All checks pass (lint, typecheck, coverage, etc.)
+```
+
+### Phase 4: REFACTOR - Clean Up While Green
+
+#### Step 4.1: Improve Code Quality
+
+- Extract helper functions
+- Improve naming
+- Add documentation
+- Optimize performance
+
+#### Step 4.2: Verify Tests Still PASS
+
+```bash
+npm run test
+npm run pre-commit
+# Expected: All tests still pass after refactoring
+```
+
+### Summary: Red-Green-Refactor Cycle
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    RED-GREEN-REFACTOR CYCLE                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────┐     ┌─────────┐     ┌───────────┐                 │
+│  │   RED   │────▶│  GREEN  │────▶│  REFACTOR │──┐              │
+│  └─────────┘     └─────────┘     └───────────┘  │              │
+│       ▲                                          │              │
+│       └──────────────────────────────────────────┘              │
+│                                                                  │
+│  RED:      1. Write feature file                                │
+│            2. Write step definitions                            │
+│            3. Run tests → MUST FAIL                             │
+│            4. Write unit tests                                  │
+│            5. Run tests → MUST FAIL                             │
+│                                                                  │
+│  GREEN:    6. Implement minimal code                            │
+│            7. Run tests → MUST PASS                             │
+│            8. Run pre-commit → MUST PASS                        │
+│                                                                  │
+│  REFACTOR: 9. Improve code quality                              │
+│            10. Run tests → MUST STILL PASS                      │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Implement Inside-Out
 
 Build from the core outward:
 
@@ -477,14 +596,6 @@ Build from the core outward:
 2. **Application** - Use cases, ports, schemas
 3. **Infrastructure** - Repository implementations, external services
 4. **MCP** - Tools that expose use cases
-
-### 4. Run Pre-commit
-
-```bash
-npm run pre-commit
-```
-
-All checks must pass before committing.
 
 ## LLM Development Guides
 
