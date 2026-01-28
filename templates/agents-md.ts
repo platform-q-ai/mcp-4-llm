@@ -75,9 +75,17 @@ It is designed to be developed and maintained by autonomous LLM agents.
 └─────────────────┘             └─────────────────┘
 \`\`\`
 
-## BDD Development Workflow
+## BDD Development Workflow (Red-Green-Refactor)
 
-### Step 1: Write Feature File
+This project follows strict **Red-Green-Refactor** TDD/BDD practices. Every feature must go through this cycle:
+
+1. **RED**: Write failing tests first (both BDD feature tests AND unit tests)
+2. **GREEN**: Write minimal code to make tests pass
+3. **REFACTOR**: Clean up while keeping tests green
+
+### Phase 1: RED - Write Failing Feature Tests
+
+#### Step 1.1: Write Feature File
 
 \`\`\`gherkin
 # features/create-thing.feature
@@ -105,7 +113,7 @@ Feature: Create Thing
     And the error should suggest "Provide a non-empty name parameter"
 \`\`\`
 
-### Step 2: Implement Step Definitions
+#### Step 1.2: Implement Step Definitions
 
 \`\`\`typescript
 // tests/step-definitions/create-thing.steps.ts
@@ -171,7 +179,56 @@ Then('the error should suggest {string}', async function (this: CustomWorld, sug
 });
 \`\`\`
 
-### Step 3: Implement Domain Layer
+#### Step 1.3: Verify Feature Tests FAIL (RED)
+
+\`\`\`bash
+npm run test:features
+# Expected: Tests should FAIL because the feature is not implemented yet
+# This confirms your tests are actually testing something
+\`\`\`
+
+**CRITICAL**: If tests pass at this stage, your tests are not testing the right thing!
+
+### Phase 2: RED - Write Failing Unit Tests
+
+#### Step 2.1: Write Unit Tests for Domain Entity
+
+\`\`\`typescript
+// tests/unit/domain/entities/thing.entity.test.ts
+import { describe, it, expect } from 'vitest';
+
+import { Thing } from '../../../../src/domain/entities/thing.entity';
+import { ThingNameRequiredError } from '../../../../src/domain/errors';
+
+describe('Thing Entity', () => {
+  describe('create', () => {
+    it('should create a thing with valid data', () => {
+      const thing = Thing.create({ name: 'Test Thing' });
+
+      expect(thing.id).toBeDefined();
+      expect(thing.name).toBe('Test Thing');
+    });
+
+    it('should throw ThingNameRequiredError when name is empty', () => {
+      expect(() => Thing.create({ name: '' })).toThrow(ThingNameRequiredError);
+    });
+  });
+});
+\`\`\`
+
+#### Step 2.2: Verify Unit Tests FAIL (RED)
+
+\`\`\`bash
+npm run test:unit
+# Expected: Tests should FAIL because Thing entity doesn't exist yet
+# You may see: "Cannot find module '../../../../src/domain/entities/thing.entity'"
+\`\`\`
+
+**CRITICAL**: Both BDD tests AND unit tests must be RED before proceeding!
+
+### Phase 3: GREEN - Implement to Make Tests Pass
+
+#### Step 3.1: Implement Domain Layer
 
 \`\`\`typescript
 // src/domain/entities/thing.entity.ts
@@ -207,7 +264,7 @@ export class Thing {
 }
 \`\`\`
 
-### Step 4: Implement Application Layer
+#### Step 3.2: Implement Application Layer
 
 \`\`\`typescript
 // src/application/ports/thing-repository.port.ts
@@ -243,7 +300,7 @@ export class CreateThingUseCase {
 }
 \`\`\`
 
-### Step 5: Implement Infrastructure
+#### Step 3.3: Implement Infrastructure
 
 \`\`\`typescript
 // src/infrastructure/persistence/in-memory-thing.repository.ts
@@ -263,7 +320,7 @@ export class InMemoryThingRepository implements IThingRepository {
 }
 \`\`\`
 
-### Step 6: Wire Up DI
+#### Step 3.4: Wire Up DI
 
 \`\`\`typescript
 // src/di/container.ts
@@ -279,7 +336,7 @@ export function setupContainer() {
 export { container };
 \`\`\`
 
-### Step 7: Create MCP Tool
+#### Step 3.5: Create MCP Tool
 
 \`\`\`typescript
 // src/mcp/tools/create-thing.tool.ts
@@ -311,6 +368,73 @@ export class CreateThingTool {
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   }
 }
+\`\`\`
+
+#### Step 3.6: Verify Unit Tests PASS (GREEN)
+
+\`\`\`bash
+npm run test:unit
+# Expected: Unit tests should now PASS
+\`\`\`
+
+#### Step 3.7: Verify Feature Tests PASS (GREEN)
+
+\`\`\`bash
+npm run test:features
+# Expected: BDD tests should now PASS
+\`\`\`
+
+#### Step 3.8: Verify All Quality Gates PASS
+
+\`\`\`bash
+npm run pre-commit
+# Expected: All checks pass (lint, typecheck, coverage, etc.)
+\`\`\`
+
+### Phase 4: REFACTOR - Clean Up While Green
+
+#### Step 4.1: Improve Code Quality
+
+- Extract helper functions
+- Improve naming
+- Add documentation
+- Optimize performance
+
+#### Step 4.2: Verify Tests Still PASS
+
+\`\`\`bash
+npm run test
+npm run pre-commit
+# Expected: All tests still pass after refactoring
+\`\`\`
+
+### Summary: Red-Green-Refactor Cycle
+
+\`\`\`
+┌─────────────────────────────────────────────────────────────────┐
+│                    RED-GREEN-REFACTOR CYCLE                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────┐     ┌─────────┐     ┌───────────┐                 │
+│  │   RED   │────▶│  GREEN  │────▶│  REFACTOR │──┐              │
+│  └─────────┘     └─────────┘     └───────────┘  │              │
+│       ▲                                          │              │
+│       └──────────────────────────────────────────┘              │
+│                                                                  │
+│  RED:      1. Write feature file                                │
+│            2. Write step definitions                            │
+│            3. Run tests → MUST FAIL                             │
+│            4. Write unit tests                                  │
+│            5. Run tests → MUST FAIL                             │
+│                                                                  │
+│  GREEN:    6. Implement minimal code                            │
+│            7. Run tests → MUST PASS                             │
+│            8. Run pre-commit → MUST PASS                        │
+│                                                                  │
+│  REFACTOR: 9. Improve code quality                              │
+│            10. Run tests → MUST STILL PASS                      │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 \`\`\`
 
 ## Error Handling
