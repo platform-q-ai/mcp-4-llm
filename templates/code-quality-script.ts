@@ -14,11 +14,14 @@ export function getCodeQualityScript(): string {
 # 4: Zod validation in use cases (.parse or .safeParse)
 # 5a-b: Domain error structure (base class and implementations)
 # 6a-f: BDD feature coverage (features, scenarios, step definitions)
+# 6g: Undefined/Pending steps (Cucumber dry-run)
+# 6h: Step usage statistics
 # 7: Value objects throw DomainError not generic Error
 # 8: MCP tools have error handling (try-catch, structured errors)
 # 9: MCP tools registered in server
 # 10: Use cases exposed via MCP tools
 # 11: Barrel exports are used
+# 12a-b: Dead code detection (unused variables, orphan files)
 
 set -e
 
@@ -419,6 +422,36 @@ if [ "\$USE_CASE_COUNT" -gt 0 ] && [ "\$TOTAL_SCENARIOS" -gt 0 ]; then
   fi
 fi
 
+# 6g: Undefined/Pending Steps (uses Cucumber --dry-run)
+echo ""
+echo "Checking for undefined steps..."
+if [ -d "features" ] && [ -d "tests/step-definitions" ]; then
+  # Run cucumber-js with --dry-run to find undefined steps
+  UNDEFINED_STEPS=\$(npx cucumber-js --dry-run --format summary 2>&1 | grep -E "undefined|pending" || true)
+  if echo "\$UNDEFINED_STEPS" | grep -qE "[0-9]+ undefined|[0-9]+ pending"; then
+    echo -e "\${RED}❌ Found undefined or pending steps:\${NC}"
+    echo "\$UNDEFINED_STEPS"
+    echo ""
+    echo "   Run 'npx cucumber-js --dry-run' to see which steps need definitions"
+    ERRORS_FOUND=1
+  else
+    echo -e "\${GREEN}✓ All steps have definitions\${NC}"
+  fi
+fi
+
+# 6h: Step Usage Statistics
+echo ""
+echo "Step definition usage statistics..."
+if [ -d "tests/step-definitions" ] && [ -d "features" ]; then
+  # Count step definitions (Given/When/Then decorators)
+  STEP_DEF_COUNT=\$(grep -rhE "^(Given|When|Then)\\(" tests/step-definitions/*.ts 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+  
+  # Count step usages in feature files (Given/When/Then/And/But lines)
+  STEP_USAGE_COUNT=\$(grep -rhE "^\\s*(Given|When|Then|And|But) " features/*.feature 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+  
+  echo -e "\${GREEN}✓ Step definition coverage: \${STEP_DEF_COUNT} definitions, \${STEP_USAGE_COUNT} usages in features\${NC}"
+fi
+
 # ============================================
 # CHECK 7: Value Objects Throw Domain Errors
 # ============================================
@@ -550,6 +583,76 @@ if [ -f "src/mcp/tools/index.ts" ] && [ -f "src/mcp/server.ts" ]; then
   if grep -q "from.*tools" "src/mcp/server.ts" 2>/dev/null || grep -q "from.*'./tools'" "src/mcp/server.ts" 2>/dev/null; then
     echo -e "\${GREEN}✓ Server imports from tools barrel\${NC}"
   fi
+fi
+
+# ============================================
+# CHECK 12: Dead Code Detection
+# ============================================
+
+echo ""
+echo -e "\${YELLOW}🧹 CHECK 12: Dead code detection...\${NC}"
+echo ""
+
+# 12a: Unused variables via ESLint (no-unused-vars rule)
+echo "Checking for unused variables..."
+UNUSED_VARS=\$(npx eslint src --rule '{"@typescript-eslint/no-unused-vars": "error"}' --format compact 2>&1 | grep "no-unused-vars" || true)
+if [ -n "\$UNUSED_VARS" ]; then
+  echo -e "\${RED}❌ Found unused variables:\${NC}"
+  echo "\$UNUSED_VARS" | head -10
+  UNUSED_COUNT=\$(echo "\$UNUSED_VARS" | wc -l | tr -d ' ')
+  if [ "\$UNUSED_COUNT" -gt 10 ]; then
+    echo -e "\${YELLOW}   ... and \$((\$UNUSED_COUNT - 10)) more occurrences\${NC}"
+  fi
+  echo ""
+  ERRORS_FOUND=1
+else
+  echo -e "\${GREEN}✓ No unused variables found\${NC}"
+fi
+
+# 12b: Orphan source files (files not imported anywhere)
+echo ""
+echo "Checking for orphan source files..."
+
+# Patterns to exclude from orphan check (test utilities, entry points, type definitions)
+EXCLUDE_PATTERNS="index\\.ts|index\\.js|\\.d\\.ts|in-memory-.*-repository|test-.*|mock-.*"
+
+ORPHAN_FILES=""
+for file in \$(find src -name "*.ts" ! -name "index.ts" ! -name "*.d.ts" 2>/dev/null); do
+  # Skip files matching exclude patterns
+  if echo "\$file" | grep -qE "\$EXCLUDE_PATTERNS"; then
+    continue
+  fi
+  
+  # Get the base name without extension for import matching
+  BASENAME=\$(basename "\$file" .ts)
+  
+  # Check if this file is imported anywhere in src or tests
+  # Look for import patterns like: from './file', from '../file', from 'module/file'
+  IMPORT_CHECK=\$(grep -rlE "(from.*['\"].*\${BASENAME}['\"]|require.*['\"].*\${BASENAME}['\"])" src tests 2>/dev/null | grep -v "\$file" || true)
+  
+  # Also check if it's exported from a barrel file
+  BARREL_CHECK=\$(grep -rlE "export.*from.*['\"].*\${BASENAME}['\"]" src 2>/dev/null || true)
+  
+  if [ -z "\$IMPORT_CHECK" ] && [ -z "\$BARREL_CHECK" ]; then
+    # Additional check: is this file the entry point?
+    if [ "\$file" != "src/index.ts" ]; then
+      ORPHAN_FILES="\${ORPHAN_FILES}\${file}\n"
+    fi
+  fi
+done
+
+if [ -n "\$ORPHAN_FILES" ]; then
+  echo -e "\${RED}❌ Found orphan source files (not imported anywhere):\${NC}"
+  echo -e "\$ORPHAN_FILES" | head -10
+  ORPHAN_COUNT=\$(echo -e "\$ORPHAN_FILES" | grep -c "." || echo "0")
+  if [ "\$ORPHAN_COUNT" -gt 10 ]; then
+    echo -e "\${YELLOW}   ... and \$((\$ORPHAN_COUNT - 10)) more files\${NC}"
+  fi
+  echo ""
+  echo "   Either import these files or remove them if no longer needed"
+  ERRORS_FOUND=1
+else
+  echo -e "\${GREEN}✓ No orphan source files found\${NC}"
 fi
 
 # ============================================

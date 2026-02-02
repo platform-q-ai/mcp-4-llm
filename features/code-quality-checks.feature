@@ -114,6 +114,15 @@ Feature: Code Quality Checks
   Scenario: Check 6f - Minimum scenario count
     Then the script should check minimum scenario count
 
+  Scenario: Check 6g - Undefined/Pending Steps
+    Then the script should use Cucumber dry-run to detect undefined steps
+    And the script should fail if undefined steps are found
+
+  Scenario: Check 6h - Step Usage Statistics
+    Then the script should count step definitions
+    And the script should count step usages in features
+    And the script should report step coverage statistics
+
   # ============================================
   # CHECK 7: Value Object Error Types
   # ============================================
@@ -150,3 +159,16 @@ Feature: Code Quality Checks
 
   Scenario: Check 11 - Tool barrel exports are used
     Then the script should check tool exports are resolved in server
+
+  # ============================================
+  # CHECK 12: Dead Code Detection
+  # ============================================
+
+  Scenario: Check 12a - Unused variables via ESLint
+    Then the script should use ESLint to find unused variables
+    And the script should fail if unused variables are found in src
+
+  Scenario: Check 12b - Orphan source files
+    Then the script should scan for source files not imported anywhere
+    And the script should exclude test-only utilities from dead code check
+    And the script should fail if orphan source files are found

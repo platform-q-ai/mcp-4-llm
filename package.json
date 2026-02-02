@@ -1,6 +1,6 @@
 {
   "name": "@pqai/mcp-4-llm",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "MCP 4 LLM - LLM-ready MCP project generator with Clean Architecture, enforced boundaries, and autonomous development guardrails",
   "type": "module",
   "bin": {

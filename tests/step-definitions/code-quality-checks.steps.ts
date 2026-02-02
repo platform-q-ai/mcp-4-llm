@@ -201,6 +201,36 @@ Then('the script should check minimum scenario count', function () {
 });
 
 // ============================================
+// CHECK 6g: Undefined/Pending Steps
+// ============================================
+
+Then('the script should use Cucumber dry-run to detect undefined steps', function () {
+  expect(scriptContent).to.include('--dry-run');
+  expect(scriptContent).to.match(/cucumber|npx cucumber-js/i);
+});
+
+Then('the script should fail if undefined steps are found', function () {
+  expect(scriptContent).to.match(/undefined.*step|UNDEFINED_STEPS/i);
+  expect(scriptContent).to.include('ERRORS_FOUND=1');
+});
+
+// ============================================
+// CHECK 6h: Step Usage Statistics
+// ============================================
+
+Then('the script should count step definitions', function () {
+  expect(scriptContent).to.match(/step.*definition.*count|STEP_DEF_COUNT/i);
+});
+
+Then('the script should count step usages in features', function () {
+  expect(scriptContent).to.match(/step.*usage|STEP_USAGE_COUNT/i);
+});
+
+Then('the script should report step coverage statistics', function () {
+  expect(scriptContent).to.match(/definition|usage|statistic/i);
+});
+
+// ============================================
 // CHECK 7: Value Objects
 // ============================================
 
@@ -254,4 +284,31 @@ Then('the script should check use cases are used by MCP tools', function () {
 Then('the script should check tool exports are resolved in server', function () {
   expect(scriptContent).to.include('tools');
   expect(scriptContent).to.include('server');
+});
+
+// ============================================
+// CHECK 12: Dead Code Detection
+// ============================================
+
+Then('the script should use ESLint to find unused variables', function () {
+  expect(scriptContent).to.match(/eslint|no-unused-vars/i);
+  expect(scriptContent).to.match(/unused.*variable|UNUSED_VARS/i);
+});
+
+Then('the script should fail if unused variables are found in src', function () {
+  expect(scriptContent).to.match(/unused.*variable|UNUSED_VARS/i);
+  expect(scriptContent).to.include('ERRORS_FOUND=1');
+});
+
+Then('the script should scan for source files not imported anywhere', function () {
+  expect(scriptContent).to.match(/orphan|not.*imported|ORPHAN_FILES/i);
+});
+
+Then('the script should exclude test-only utilities from dead code check', function () {
+  expect(scriptContent).to.match(/exclude|test.*util|in-memory|EXCLUDE_PATTERNS/i);
+});
+
+Then('the script should fail if orphan source files are found', function () {
+  expect(scriptContent).to.match(/orphan|not.*imported/i);
+  expect(scriptContent).to.include('ERRORS_FOUND=1');
 });

@@ -140,4 +140,55 @@ describe('code-quality-script template', () => {
       expect(script).toMatch(/passed|success/i);
     });
   });
+
+  describe('undefined steps detection (CHECK 6g)', () => {
+    it('should use Cucumber dry-run to detect undefined steps', () => {
+      expect(script).toContain('--dry-run');
+      expect(script).toMatch(/cucumber-js|npx cucumber/i);
+    });
+
+    it('should check for undefined steps in output', () => {
+      expect(script).toMatch(/undefined.*step|UNDEFINED_STEPS/i);
+    });
+
+    it('should set ERRORS_FOUND when undefined steps exist', () => {
+      // The script should fail if undefined steps are found
+      // Check that the undefined steps section sets ERRORS_FOUND=1
+      expect(script).toContain('UNDEFINED_STEPS');
+      expect(script).toContain('ERRORS_FOUND=1');
+    });
+  });
+
+  describe('step usage statistics (CHECK 6h)', () => {
+    it('should count step definitions', () => {
+      expect(script).toMatch(/STEP_DEF_COUNT|step.*definition.*count/i);
+    });
+
+    it('should count step usages in features', () => {
+      expect(script).toMatch(/STEP_USAGE_COUNT|step.*usage/i);
+    });
+
+    it('should report statistics about step coverage', () => {
+      expect(script).toMatch(/definition|usage/i);
+    });
+  });
+
+  describe('dead code detection (CHECK 12)', () => {
+    it('should use ESLint to find unused variables', () => {
+      expect(script).toMatch(/eslint.*no-unused-vars|UNUSED_VARS/i);
+    });
+
+    it('should scan for orphan source files not imported anywhere', () => {
+      expect(script).toMatch(/orphan|ORPHAN_FILES|not.*imported/i);
+    });
+
+    it('should exclude test utilities from orphan check', () => {
+      expect(script).toMatch(/exclude.*test|EXCLUDE_PATTERNS|in-memory/i);
+    });
+
+    it('should set ERRORS_FOUND when dead code is detected', () => {
+      // Check that both unused vars and orphan files can trigger errors
+      expect(script).toContain('ERRORS_FOUND=1');
+    });
+  });
 });

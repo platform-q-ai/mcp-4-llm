@@ -86,13 +86,22 @@ async function main() {
 
   // Parse CLI args
   let name = process.argv[2];
+  let description: string | undefined;
+
+  // Parse --description flag
+  const descIndex = process.argv.indexOf('--description');
+  if (descIndex !== -1 && process.argv[descIndex + 1]) {
+    description = process.argv[descIndex + 1];
+  }
 
   if (!name || name.startsWith('-')) {
     name = await prompt('Project name: ');
   }
 
-  // Auto-generate description from project name
-  const description = `${name} MCP server`;
+  // Use provided description or auto-generate from project name
+  if (!description) {
+    description = `${name} MCP server`;
+  }
 
   // Validate name
   if (!/^[a-z][a-z0-9-]*$/.test(name)) {
